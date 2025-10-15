@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Main Shopfloor Grid Template -->
+    <t t-name="steel_structure_project.ShopfloorGridWidget">
+        <div class="shopfloor-grid-widget">
+
+            <!-- Loading Spinner -->
+            <div t-if="state.isLoading" class="text-center p-5">
+                <i class="fa fa-spinner fa-spin fa-3x text-primary"/>
+                <p class="mt-3">Loading shopfloor data...</p>
+            </div>
+
+            <!-- Main Grid -->
+            <div t-else="" class="shopfloor-grid-container">
+
+                <!-- Empty State -->
+                <div t-if="!state.stages || state.stages.length === 0"
+                     class="alert alert-warning text-center" role="alert">
+                    <h4><i class="fa fa-exclamation-triangle"/> No Stages Found</h4>
+                    <p>Please define production stages in the component configuration first.</p>
+                </div>
+
+                <!-- Stage Squares -->
+                <t t-foreach="state.stages" t-as="stage" t-key="stage.id">
+                    <div class="stage-square"
+                         t-att-data-stage-id="stage.id">
+
+                        <!-- Stage Header -->
+                        <div class="stage-header">
+                            <div>
+                                <div class="stage-title">
+                                    <i class="fa fa-cog"/>
+                                    <t t-esc="stage.name"/>
+                                </div>
+                                <div class="text-white-50" style="font-size: 12px;" t-if="stage.workcenter">
+                                    <i class="fa fa-industry"/> <t t-esc="stage.workcenter"/>
+                                </div>
+                            </div>
+                            <div class="stage-count">
+                                <i class="fa fa-cubes"/>
+                                <t t-esc="getFilteredWorkOrders(stage).length"/>
+                            </div>
+                        </div>
+
+                        <!-- Work Order Cards Container -->
+                        <div class="stage-parts-container" style="min-height: 300px;">
+
+                            <!-- Empty Stage -->
+                            <div t-if="getFilteredWorkOrders(stage).length === 0"
+                                 class="stage-drop-zone">
+                                <span>
+                                    <i class="fa fa-inbox"/>
+                                    <t t-if="state.searchTerm || state.filterState !== 'all'">
+                                        No matching parts
+                                    </t>
+                                    <t t-else="">
+                                        Drop parts here
+                                    </t>
+                                </span>
+                            </div>
+
+                            <!-- Part Cards -->
+                            <t t-foreach="getFilteredWorkOrders(stage)" t-as="workOrder" t-key="workOrder.id">
+                                <div class="part-card"
+                                     t-att-class="getStateClass(workOrder.state) + (state.selectedCards.has(workOrder.id) ? ' border-primary' : '')"
+                                     t-att-data-wo-id="workOrder.id"
+                                     t-on-click="(e) => toggleCardSelection(workOrder.id, e)"
+                                     t-on-dblclick="() => openQuickEdit(workOrder.id)">
+
+                                    <!-- Part Header -->
+                                    <div class="part-header">
+                                        <div class="part-name">
+                                            <i class="fa fa-cube"/>
+                                            <t t-esc="workOrder.part_name"/>
+                                        </div>
+                                        <div>
+                                            <!-- Priority -->
+                                            <t t-if="workOrder.priority === '1'">
+                                                <i class="fa fa-star text-warning" title="High Priority"/>
+                                            </t>
+                                            <t t-if="workOrder.priority === '2'">
+                                                <i class="fa fa-star text-danger" title="Urgent"/>
+                                            </t>
+                                            <!-- State Badge -->
+                                            <span class="badge ms-1"
+                                                  t-att-class="getStateBadgeClass(workOrder.state)"
+                                                  style="font-size: 10px;">
+                                                <t t-if="workOrder.state === 'done'">✓</t>
+                                                <t t-elif="workOrder.state === 'in_progress'">⏳</t>
+                                                <t t-elif="workOrder.state === 'blocked'">⛔</t>
+                                                <t t-else="">⏸</t>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Material -->
+                                    <div class="part-material" t-if="workOrder.material">
+                                        <i class="fa fa-archive"/> <t t-esc="workOrder.material"/>
+                                    </div>
+
+                                    <!-- Quantity Progress Bar -->
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <small class="text-muted">
+                                                <i class="fa fa-cubes"/> Qty:
+                                                <strong><t t-esc="workOrder.quantity_produced"/>/<t t-esc="workOrder.quantity_planned"/></strong>
+                                            </small>
+                                            <small class="text-muted">
+                                                <t t-esc="Math.round(workOrder.progress_pct)"/>%
+                                            </small>
+                                        </div>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar"
+                                                 t-att-class="workOrder.progress_pct >= 100 ? 'bg-success' : workOrder.progress_pct >= 50 ? 'bg-info' : 'bg-warning'"
+                                                 role="progressbar"
+                                                 t-att-style="'width: ' + Math.min(workOrder.progress_pct, 100) + '%'"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stats Row -->
+                                    <div class="part-stats">
+                                        <div>
+                                            <i class="fa fa-clock-o"/>
+                                            <t t-esc="formatTime(workOrder.actual_time)"/>
+                                            <span t-if="workOrder.time_variance !== 0"
+                                                  t-att-class="workOrder.time_variance > 0 ? 'text-danger' : 'text-success'"
+                                                  style="font-size: 11px;">
+                                                (<t t-esc="workOrder.time_variance > 0 ? '+' : ''"/><t t-esc="formatTime(Math.abs(workOrder.time_variance))"/>)
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <i class="fa fa-money"/>
+                                            <t t-esc="formatCurrency(workOrder.actual_cost)"/>
+                                        </div>
+                                    </div>
+
+                                    <!-- Workers -->
+                                    <div t-if="workOrder.workers &amp;&amp; workOrder.workers.length > 0"
+                                         class="mt-2 pt-2"
+                                         style="border-top: 1px solid #e9ecef; font-size: 11px;">
+                                        <i class="fa fa-users text-muted"/>
+                                        <t t-foreach="workOrder.workers" t-as="worker" t-key="worker_index">
+                                            <span class="badge bg-light text-dark me-1">
+                                                <t t-esc="worker"/>
+                                            </span>
+                                        </t>
+                                    </div>
+
+                                    <!-- Deadline Warning -->
+                                    <div t-if="workOrder.deadline"
+                                         class="mt-2 pt-2"
+                                         style="border-top: 1px solid #e9ecef; font-size: 11px;">
+                                        <i class="fa fa-calendar text-warning"/>
+                                        Due: <t t-esc="workOrder.deadline"/>
+                                    </div>
+
+                                    <!-- Quick Actions (shown on hover) -->
+                                    <div class="part-quick-actions"
+                                         style="display: none; position: absolute; top: 5px; right: 5px;">
+                                        <button class="btn btn-sm btn-light"
+                                                t-on-click.stop="() => openQuickEdit(workOrder.id)"
+                                                title="Edit">
+                                            <i class="fa fa-edit"/>
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
+
+                        </div>
+                    </div>
+                </t>
+
+            </div>
+
+            <!-- Selection Info Bar (when multiple selected) -->
+            <div t-if="state.selectedCards.size > 1"
+                 class="alert alert-info position-fixed bottom-0 start-50 translate-middle-x mb-3"
+                 role="alert"
+                 style="z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <div class="d-flex align-items-center">
+                    <i class="fa fa-check-square-o fa-2x me-3"/>
+                    <div>
+                        <strong><t t-esc="state.selectedCards.size"/> parts selected</strong>
+                        <div class="small">Drag to move all, or right-click for bulk actions</div>
+                    </div>
+                    <button class="btn btn-sm btn-primary ms-3"
+                            t-on-click="() => state.selectedCards.clear()">
+                        <i class="fa fa-times"/> Clear Selection
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CSS Styles -->
+        <style>
+            .part-card:hover .part-quick-actions {
+                display: block !important;
+            }
+
+            .part-card.border-primary {
+                border-width: 3px !important;
+                box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+            }
+
+            .stage-drop-zone.drag-over {
+                animation: pulse 0.5s infinite alternate;
+            }
+
+            @keyframes pulse {
+                from {
+                    background-color: #e7f3ff;
+                }
+                to {
+                    background-color: #cfe2ff;
+                }
+            }
+
+            .part-card {
+                transition: all 0.2s ease;
+                position: relative;
+            }
+
+            .part-card:hover {
+                z-index: 10;
+            }
+
+            .stage-parts-container {
+                max-height: 600px;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .stage-parts-container::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .stage-parts-container::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+
+            .stage-parts-container::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 3px;
+            }
+
+            .stage-parts-container::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+        </style>
+    </t>
+
+</templates>

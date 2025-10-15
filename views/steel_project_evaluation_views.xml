@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Steel Evaluation Part Form View -->
+    <record id="view_steel_evaluation_part_form" model="ir.ui.view">
+        <field name="name">steel.evaluation.part.form</field>
+        <field name="model">steel.evaluation.part</field>
+        <field name="arch" type="xml">
+            <form string="Material Part">
+                <header>
+                    <button name="action_create_new_version" string="Create New Version" type="object"
+                            class="btn-primary" invisible="can_edit or not is_active_version"
+                            help="Create a new version of this part to make changes"/>
+                    <field name="version" invisible="1"/>
+                    <field name="is_active_version" invisible="1"/>
+                    <field name="is_used_in_operations" invisible="1"/>
+                    <field name="can_edit" invisible="1"/>
+                </header>
+                <sheet>
+                    <!-- Warning if part is in use -->
+                    <div class="alert alert-warning" role="alert" invisible="not is_used_in_operations">
+                        <strong>⚠️ Part In Use</strong>
+                        <p>This part (v<field name="version" readonly="1"/>) is being used by operations and cannot be edited.</p>
+                        <p>Click "Create New Version" to make changes.</p>
+                    </div>
+
+                    <!-- Version info -->
+                    <div class="alert alert-info" role="alert" invisible="version == 1">
+                        <strong>Version <field name="version" readonly="1"/></strong>
+                        <span invisible="not previous_version_id">
+                            | Previous: <field name="previous_version_id" readonly="1"/>
+                        </span>
+                        <span invisible="not superseded_by_id">
+                            | Superseded by: <field name="superseded_by_id" readonly="1"/>
+                        </span>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="part_name" readonly="not can_edit"/>
+                            <field name="part_number" readonly="not can_edit"/>
+                            <field name="component_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="material_id" readonly="not can_edit"/>
+                            <field name="quantity" readonly="not can_edit"/>
+                            <field name="uom_id"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group>
+                            <field name="unit_cost" readonly="not can_edit"/>
+                            <field name="total_cost" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Change Information" invisible="version == 1">
+                        <field name="change_reason" placeholder="Why was this version created?"/>
+                    </group>
+
+                    <group string="Usage Information" invisible="not is_used_in_operations">
+                        <field name="operations_using_part" readonly="1">
+                            <tree>
+                                <field name="display_name"/>
+                                <field name="state"/>
+                            </tree>
+                        </field>
+                    </group>
+
+                    <group>
+                        <field name="notes"/>
+                    </group>
+
+                    <field name="evaluation_id" invisible="1"/>
+                    <field name="superseded_by_id" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Steel Evaluation Part Tree View -->
+    <record id="view_steel_evaluation_part_tree" model="ir.ui.view">
+        <field name="name">steel.evaluation.part.tree</field>
+        <field name="model">steel.evaluation.part</field>
+        <field name="arch" type="xml">
+            <tree decoration-muted="not is_active_version"
+                  decoration-warning="is_used_in_operations"
+                  decoration-success="is_active_version and not is_used_in_operations">
+                <field name="sequence" widget="handle"/>
+                <field name="part_name"/>
+                <field name="part_number"/>
+                <field name="version" string="Ver"/>
+                <field name="material_id"/>
+                <field name="quantity"/>
+                <field name="uom_id"/>
+                <field name="unit_cost"/>
+                <field name="total_cost" sum="Total"/>
+                <field name="is_active_version" string="Active" widget="boolean_toggle"/>
+                <field name="is_used_in_operations" string="In Use" widget="badge"
+                       decoration-warning="is_used_in_operations"/>
+                <field name="can_edit" invisible="1"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="component_id" optional="hide"/>
+                <button name="action_create_new_version" string="New Version" type="object"
+                        icon="fa-plus-circle" invisible="can_edit or not is_active_version"
+                        title="Create new version to make changes"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Steel Project Evaluation Form View -->
+    <record id="view_steel_project_evaluation_form" model="ir.ui.view">
+        <field name="name">steel.project.evaluation.form</field>
+        <field name="model">steel.project.evaluation</field>
+        <field name="arch" type="xml">
+            <form string="Project Evaluation">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_import_from_components" string="📥 Import from Components" type="object"
+                            class="btn-info"/>
+                    <button name="action_view_operations" string="👁️ View Operations" type="object"
+                            invisible="operation_count == 0"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+
+                <sheet>
+                    <!-- Warning when parts are in use -->
+                    <field name="parts_in_use_message" invisible="not has_parts_in_use" widget="html"/>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="project_id" options="{'no_create': True}"/>
+                            <field name="customer_id"/>
+                            <field name="evaluation_date"/>
+                        </group>
+                        <group>
+                            <field name="operation_count"/>
+                            <field name="parts_in_use_count" invisible="parts_in_use_count == 0"/>
+                            <field name="has_parts_in_use" invisible="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Cost Summary">
+                        <group>
+                            <field name="total_material_cost" widget="monetary"/>
+                            <field name="total_labor_cost" widget="monetary"/>
+                            <field name="total_estimated_cost" widget="monetary"
+                                   class="oe_subtotal_footer_separator"/>
+                        </group>
+                        <group>
+                            <field name="overhead_percentage"/>
+                            <field name="overhead_cost" widget="monetary"/>
+                            <field name="profit_margin_percentage"/>
+                            <field name="profit_amount" widget="monetary"/>
+                            <field name="final_quote" widget="monetary"
+                                   class="oe_subtotal_footer_separator"
+                                   style="font-weight: bold; font-size: 1.2em;"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="📦 Material Parts" name="material_parts">
+                            <div class="alert alert-info" role="alert">
+                                <strong>ℹ️ Version Control per Part</strong>
+                                <p>
+                                    <strong style="color: green;">✓ Green rows</strong> = Active version, can be edited<br/>
+                                    <strong style="color: orange;">⚠ Orange rows</strong> = Active but used in operations, create new version to edit<br/>
+                                    <strong style="color: gray;">○ Gray rows</strong> = Old versions, superseded
+                                </p>
+                            </div>
+
+                            <field name="evaluation_part_ids">
+                                <tree editable="bottom"
+                                      decoration-muted="not is_active_version"
+                                      decoration-warning="is_used_in_operations and is_active_version"
+                                      decoration-success="is_active_version and not is_used_in_operations">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="part_name" readonly="not can_edit"/>
+                                    <field name="part_number" readonly="not can_edit"/>
+                                    <field name="version" string="Ver"/>
+                                    <field name="material_id" readonly="not can_edit"/>
+                                    <field name="quantity" readonly="not can_edit"/>
+                                    <field name="uom_id"/>
+                                    <field name="unit_cost" readonly="not can_edit"/>
+                                    <field name="total_cost" sum="Total (Active Only)"
+                                           decoration-bf="is_active_version"/>
+                                    <field name="is_active_version" string="Active" widget="boolean_toggle"/>
+                                    <field name="is_used_in_operations" string="In Use" optional="show"/>
+                                    <field name="can_edit" invisible="1"/>
+                                    <field name="notes" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="component_id" optional="hide"/>
+                                    <button name="action_create_new_version" string="" type="object"
+                                            icon="fa-plus-circle"
+                                            invisible="can_edit or not is_active_version"
+                                            title="Create new version"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="📊 Cost Breakdown" name="cost_breakdown">
+                            <group>
+                                <group string="Material &amp; Labor Costs">
+                                    <field name="total_material_cost" widget="monetary" readonly="1"/>
+                                    <field name="total_labor_cost" widget="monetary" readonly="1"/>
+                                    <field name="total_estimated_cost" widget="monetary" readonly="1"
+                                           class="oe_subtotal_footer_separator"/>
+                                </group>
+                                <group string="Markup">
+                                    <field name="overhead_percentage"/>
+                                    <field name="overhead_cost" widget="monetary" readonly="1"/>
+                                    <field name="profit_margin_percentage"/>
+                                    <field name="profit_amount" widget="monetary" readonly="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Final Quote">
+                                    <field name="final_quote" widget="monetary" readonly="1"
+                                           class="oe_subtotal_footer_separator"
+                                           style="font-size: 1.3em; font-weight: bold;"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="📝 Notes" name="notes">
+                            <field name="notes" placeholder="Additional notes for this evaluation..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Steel Project Evaluation Tree View -->
+    <record id="view_steel_project_evaluation_tree" model="ir.ui.view">
+        <field name="name">steel.project.evaluation.tree</field>
+        <field name="model">steel.project.evaluation</field>
+        <field name="arch" type="xml">
+            <tree string="Project Evaluations">
+                <field name="display_name"/>
+                <field name="project_id"/>
+                <field name="customer_id"/>
+                <field name="evaluation_date"/>
+                <field name="total_material_cost"/>
+                <field name="total_labor_cost"/>
+                <field name="total_estimated_cost"/>
+                <field name="final_quote" decoration-bf="1"/>
+                <field name="operation_count"/>
+                <field name="parts_in_use_count" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'"/>
+                <field name="currency_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Steel Project Evaluation Search View -->
+    <record id="view_steel_project_evaluation_search" model="ir.ui.view">
+        <field name="name">steel.project.evaluation.search</field>
+        <field name="model">steel.project.evaluation</field>
+        <field name="arch" type="xml">
+            <search string="Search Evaluations">
+                <field name="project_id"/>
+                <field name="customer_id"/>
+
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="With Parts In Use" name="parts_in_use"
+                        domain="[('parts_in_use_count', '&gt;', 0)]"/>
+                <separator/>
+                <filter string="This Month" name="this_month"
+                        domain="[('evaluation_date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%Y-%m-01'))]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'customer_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Evaluation Date" name="group_date" context="{'group_by': 'evaluation_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Steel Project Evaluation Action -->
+    <record id="action_steel_project_evaluation" model="ir.actions.act_window">
+        <field name="name">Project Evaluation</field>
+        <field name="res_model">steel.project.evaluation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a project cost evaluation
+            </p>
+            <p>
+                <strong>✨ Smart Material Version Control:</strong>
+            </p>
+            <ul>
+                <li>✅ Version control per material part (not per evaluation)</li>
+                <li>✅ Edit freely if part not used in operations</li>
+                <li>✅ Auto-create new version if part is in use</li>
+                <li>✅ Visual indicators: Green (editable), Orange (in use), Gray (old version)</li>
+                <li>✅ Import parts from components</li>
+                <li>✅ Track which operations use each part</li>
+            </ul>
+        </field>
+    </record>
+
+</odoo>

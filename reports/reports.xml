@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Report Definition -->
+    <record id="action_report_steel_project_comparison" model="ir.actions.report">
+        <field name="name">Project Comparison Report</field>
+        <field name="model">steel.project.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">steel_structure_project.report_steel_project_comparison</field>
+        <field name="report_file">steel_structure_project.report_steel_project_comparison</field>
+        <field name="binding_model_id" ref="model_steel_project_report"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

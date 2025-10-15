@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Dashboard Pivot View -->
+    <record id="view_steel_project_dashboard_pivot" model="ir.ui.view">
+        <field name="name">steel.project.dashboard.pivot</field>
+        <field name="model">steel.project.dashboard</field>
+        <field name="arch" type="xml">
+            <pivot string="Project Analysis">
+                <field name="project_id" type="row"/>
+                <field name="customer_id" type="row"/>
+                <field name="estimated_material_cost" type="measure"/>
+                <field name="actual_material_cost" type="measure"/>
+                <field name="estimated_labor_cost" type="measure"/>
+                <field name="actual_labor_cost" type="measure"/>
+                <field name="total_estimated_cost" type="measure"/>
+                <field name="total_actual_cost" type="measure"/>
+                <field name="material_variance" type="measure"/>
+                <field name="labor_variance" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Dashboard Graph View -->
+    <record id="view_steel_project_dashboard_graph" model="ir.ui.view">
+        <field name="name">steel.project.dashboard.graph</field>
+        <field name="model">steel.project.dashboard</field>
+        <field name="arch" type="xml">
+            <graph string="Project Analytics" type="bar">
+                <field name="project_id"/>
+                <field name="estimated_material_cost" type="measure"/>
+                <field name="actual_material_cost" type="measure"/>
+                <field name="estimated_labor_cost" type="measure"/>
+                <field name="actual_labor_cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Dashboard Tree View -->
+    <record id="view_steel_project_dashboard_tree" model="ir.ui.view">
+        <field name="name">steel.project.dashboard.tree</field>
+        <field name="model">steel.project.dashboard</field>
+        <field name="arch" type="xml">
+            <tree string="Project Dashboard" create="false" edit="false" delete="false">
+                <field name="project_id"/>
+                <field name="customer_id"/>
+                <field name="project_state" decoration-success="project_state == 'done'"
+                       decoration-info="project_state == 'in_progress'"/>
+                <field name="product_count"/>
+                <field name="total_parts"/>
+                <field name="progress_percentage" widget="progressbar"/>
+                <field name="estimated_material_cost"/>
+                <field name="actual_material_cost"/>
+                <field name="material_variance" decoration-danger="material_variance &gt; 0"
+                       decoration-success="material_variance &lt;= 0"/>
+                <field name="estimated_labor_cost"/>
+                <field name="actual_labor_cost"/>
+                <field name="labor_variance" decoration-danger="labor_variance &gt; 0"
+                       decoration-success="labor_variance &lt;= 0"/>
+                <field name="total_estimated_cost"/>
+                <field name="total_actual_cost"/>
+                <field name="currency_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Dashboard Form View -->
+    <record id="view_steel_project_dashboard_form" model="ir.ui.view">
+        <field name="name">steel.project.dashboard.form</field>
+        <field name="model">steel.project.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Project Dashboard" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="project_id" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="customer_id"/>
+                            <field name="project_state"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                        </group>
+                        <group>
+                            <field name="product_count"/>
+                            <field name="total_parts"/>
+                            <field name="total_stages"/>
+                            <field name="progress_percentage" widget="progressbar"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Cost Analysis" name="cost">
+                            <group>
+                                <group string="Material Costs">
+                                    <field name="estimated_material_cost" widget="monetary"/>
+                                    <field name="actual_material_cost" widget="monetary"/>
+                                    <field name="material_variance" widget="monetary"/>
+                                    <field name="material_variance_pct" widget="percentage"/>
+                                </group>
+                                <group string="Labor Costs">
+                                    <field name="estimated_labor_cost" widget="monetary"/>
+                                    <field name="actual_labor_cost" widget="monetary"/>
+                                    <field name="labor_variance" widget="monetary"/>
+                                    <field name="labor_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Total Costs">
+                                    <field name="total_estimated_cost" widget="monetary"/>
+                                    <field name="total_actual_cost" widget="monetary"/>
+                                    <field name="final_quote" widget="monetary"/>
+                                </group>
+                                <group string="Profitability">
+                                    <field name="profit_margin" widget="monetary"/>
+                                    <field name="actual_profit" widget="monetary"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Time Analysis" name="time">
+                            <group>
+                                <group>
+                                    <field name="estimated_hours"/>
+                                    <field name="actual_hours"/>
+                                </group>
+                                <group>
+                                    <field name="time_variance"/>
+                                    <field name="time_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Stage Progress" name="stages">
+                            <group>
+                                <group>
+                                    <field name="total_stages"/>
+                                    <field name="completed_stages"/>
+                                </group>
+                                <group>
+                                    <field name="progress_percentage" widget="percentpie"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Dashboard Search View -->
+    <record id="view_steel_project_dashboard_search" model="ir.ui.view">
+        <field name="name">steel.project.dashboard.search</field>
+        <field name="model">steel.project.dashboard</field>
+        <field name="arch" type="xml">
+            <search string="Search Projects">
+                <field name="project_id"/>
+                <field name="customer_id"/>
+                <filter string="In Progress" name="in_progress" domain="[('project_state', '=', 'in_progress')]"/>
+                <filter string="Done" name="done" domain="[('project_state', '=', 'done')]"/>
+                <filter string="Over Budget (Material)" name="over_budget_material"
+                        domain="[('material_variance', '&gt;', 0)]"/>
+                <filter string="Over Budget (Labor)" name="over_budget_labor"
+                        domain="[('labor_variance', '&gt;', 0)]"/>
+                <filter string="Behind Schedule" name="behind_schedule"
+                        domain="[('time_variance', '&gt;', 0)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'customer_id'}"/>
+                    <filter string="Project Status" name="group_state" context="{'group_by': 'project_state'}"/>
+                    <filter string="Start Date" name="group_start_date" context="{'group_by': 'start_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Dashboard Action -->
+    <record id="action_steel_project_dashboard" model="ir.actions.act_window">
+        <field name="name">Project Dashboard</field>
+        <field name="res_model">steel.project.dashboard</field>
+        <field name="view_mode">graph,pivot,tree,form</field>
+        <field name="context">{'search_default_in_progress': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No project data available
+            </p>
+            <p>
+                The dashboard will show analytics once you have projects with operations.
+            </p>
+        </field>
+    </record>
+
+</odoo>

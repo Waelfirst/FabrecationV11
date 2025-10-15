@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Demo Customers -->
+        <record id="partner_construction_co" model="res.partner">
+            <field name="name">ABC Construction Company</field>
+            <field name="customer_rank">1</field>
+            <field name="email">info@abcconstruction.com</field>
+            <field name="phone">+1-555-0100</field>
+        </record>
+
+        <record id="partner_industrial_corp" model="res.partner">
+            <field name="name">Industrial Corp Ltd</field>
+            <field name="customer_rank">1</field>
+            <field name="email">contact@industrialcorp.com</field>
+            <field name="phone">+1-555-0200</field>
+        </record>
+
+        <!-- Demo Materials (Products) -->
+        <record id="product_steel_beam" model="product.product">
+            <field name="name">Steel I-Beam 200mm</field>
+            <field name="type">product</field>
+            <field name="standard_price">150.00</field>
+            <field name="list_price">200.00</field>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        </record>
+
+        <record id="product_steel_plate" model="product.product">
+            <field name="name">Steel Plate 10mm</field>
+            <field name="type">product</field>
+            <field name="standard_price">80.00</field>
+            <field name="list_price">120.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+        </record>
+
+        <record id="product_welding_rod" model="product.product">
+            <field name="name">Welding Rod 3.2mm</field>
+            <field name="type">consu</field>
+            <field name="standard_price">5.00</field>
+            <field name="list_price">8.00</field>
+            <field name="uom_id" ref="uom.product_uom_kgm"/>
+            <field name="uom_po_id" ref="uom.product_uom_kgm"/>
+        </record>
+
+        <record id="product_steel_column" model="product.product">
+            <field name="name">Steel Column 300x300</field>
+            <field name="type">product</field>
+            <field name="standard_price">250.00</field>
+            <field name="list_price">350.00</field>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+        </record>
+
+        <!-- Demo Employees -->
+        <record id="employee_welder_john" model="hr.employee">
+            <field name="name">John Smith (Welder)</field>
+            <field name="job_title">Senior Welder</field>
+        </record>
+
+        <record id="employee_fabricator_mary" model="hr.employee">
+            <field name="name">Mary Johnson (Fabricator)</field>
+            <field name="job_title">Steel Fabricator</field>
+        </record>
+
+        <record id="employee_operator_bob" model="hr.employee">
+            <field name="name">Bob Williams (Operator)</field>
+            <field name="job_title">Machine Operator</field>
+        </record>
+
+        <!-- Demo Equipment -->
+        <record id="equipment_welding_machine" model="maintenance.equipment">
+            <field name="name">Industrial Welding Machine #1</field>
+        </record>
+
+        <record id="equipment_cutting_machine" model="maintenance.equipment">
+            <field name="name">CNC Plasma Cutter</field>
+        </record>
+
+        <record id="equipment_bending_machine" model="maintenance.equipment">
+            <field name="name">Hydraulic Press Brake</field>
+        </record>
+
+        <!-- Demo Projects -->
+        <record id="project_warehouse" model="steel.project">
+            <field name="project_name">Warehouse Steel Structure</field>
+            <field name="customer_id" ref="partner_construction_co"/>
+            <field name="start_date" eval="(datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')"/>
+            <field name="end_date" eval="(datetime.now() + timedelta(days=60)).strftime('%Y-%m-%d')"/>
+            <field name="state">in_progress</field>
+            <field name="project_location">Industrial Zone A, Downtown</field>
+            <field name="notes">Steel structure for 5000 sqm warehouse facility. Includes main frame, roof trusses, and wall columns. Height: 12m. Requirements: Heavy load capacity, corrosion resistant coating.</field>
+        </record>
+
+        <record id="project_factory" model="steel.project">
+            <field name="project_name">Industrial Factory Extension</field>
+            <field name="customer_id" ref="partner_industrial_corp"/>
+            <field name="start_date" eval="datetime.now().strftime('%Y-%m-%d')"/>
+            <field name="end_date" eval="(datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')"/>
+            <field name="state">draft</field>
+            <field name="project_location">Manufacturing District B</field>
+            <field name="notes">Extension of existing factory building. 3000 sqm additional area. Steel framework with crane support beams. Load capacity: 20 tons.</field>
+        </record>
+
+        <!-- Demo Products for Projects -->
+        <record id="product_main_frame" model="steel.project.product">
+            <field name="project_id" ref="project_warehouse"/>
+            <field name="product_id" ref="product_steel_beam"/>
+            <field name="quantity">100</field>
+            <field name="description">Primary structural frame for warehouse - Main beams</field>
+        </record>
+
+        <record id="product_roof_truss" model="steel.project.product">
+            <field name="project_id" ref="project_warehouse"/>
+            <field name="product_id" ref="product_steel_column"/>
+            <field name="quantity">50</field>
+            <field name="description">Structural columns for warehouse</field>
+        </record>
+
+        <record id="product_factory_frame" model="steel.project.product">
+            <field name="project_id" ref="project_factory"/>
+            <field name="product_id" ref="product_steel_beam"/>
+            <field name="quantity">75</field>
+            <field name="description">Main structural frame for factory extension</field>
+        </record>
+
+    </data>
+</odoo>

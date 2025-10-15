@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Matrix Cell Tree View -->
+    <record id="view_steel_operation_matrix_cell_tree" model="ir.ui.view">
+        <field name="name">steel.operation.matrix.cell.tree</field>
+        <field name="model">steel.operation.matrix.cell</field>
+        <field name="arch" type="xml">
+            <tree editable="bottom" decoration-success="material_issued and not is_over_tolerance" 
+                  decoration-danger="is_over_tolerance" decoration-warning="variance_qty != 0 and not is_over_tolerance">
+                <field name="operation_name"/>
+                <field name="project_id"/>
+                <field name="evaluation_id"/>
+                <field name="operation_state" widget="badge"/>
+                <field name="estimated_quantity"/>
+                <field name="actual_quantity"/>
+                <field name="variance_qty"/>
+                <field name="variance_qty_percent" widget="percentage"/>
+                <field name="estimated_time" widget="float_time"/>
+                <field name="actual_time" widget="float_time"/>
+                <field name="variance_time" widget="float_time"/>
+                <field name="estimated_cost"/>
+                <field name="actual_cost"/>
+                <field name="variance_cost"/>
+                <field name="material_issued" widget="boolean_toggle"/>
+                <field name="is_over_tolerance" invisible="1"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="notes"/>
+                <button name="action_move_to_operation" string="" type="object"
+                        icon="fa-exchange" title="Move to another operation"
+                        invisible="estimated_quantity &lt;= 0"/>
+                <button name="action_issue_material" string="" type="object"
+                        icon="fa-check" invisible="material_issued"
+                        title="Issue material"/>
+                <button name="action_save_actual_data" string="" type="object"
+                        icon="fa-save" title="Save actual data"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Matrix Line Tree View -->
+    <record id="view_steel_operation_matrix_line_tree" model="ir.ui.view">
+        <field name="name">steel.operation.matrix.line.tree</field>
+        <field name="model">steel.operation.matrix.line</field>
+        <field name="arch" type="xml">
+            <tree decoration-warning="variance_qty != 0" decoration-danger="variance_qty_percent &gt; 10 or variance_qty_percent &lt; -10">
+                <field name="part_name"/>
+                <field name="part_number"/>
+                <field name="material_id"/>
+                <field name="unit_cost"/>
+                <field name="cells_count" string="Ops"/>
+                <field name="total_estimated_qty" sum="Total Est. Qty"/>
+                <field name="total_actual_qty" sum="Total Actual Qty"/>
+                <field name="variance_qty" sum="Qty Variance"/>
+                <field name="variance_qty_percent" widget="percentage"/>
+                <field name="total_estimated_cost" sum="Est. Cost"/>
+                <field name="total_actual_cost" sum="Actual Cost"/>
+                <field name="variance_cost" sum="Cost Variance"/>
+                <field name="total_estimated_time" widget="float_time" sum="Est. Time"/>
+                <field name="total_actual_time" widget="float_time" sum="Actual Time"/>
+                <field name="variance_time" widget="float_time" sum="Time Var."/>
+                <field name="currency_id" invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Matrix Line Form View -->
+    <record id="view_steel_operation_matrix_line_form" model="ir.ui.view">
+        <field name="name">steel.operation.matrix.line.form</field>
+        <field name="model">steel.operation.matrix.line</field>
+        <field name="arch" type="xml">
+            <form string="Part Matrix">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="part_name" readonly="1"/>
+                        </h1>
+                        <h3>
+                            <field name="part_number" readonly="1"/>
+                        </h3>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="material_id"/>
+                            <field name="unit_cost"/>
+                            <field name="cells_count" string="Operations"/>
+                        </group>
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="📊 Material Summary">
+                        <group>
+                            <label for="total_estimated_qty" string="Quantities"/>
+                            <div class="o_row">
+                                <field name="total_estimated_qty" class="oe_inline"/>
+                                <span>→</span>
+                                <field name="total_actual_qty" class="oe_inline"/>
+                                <span>=</span>
+                                <field name="variance_qty" class="oe_inline"/>
+                                <span>(</span>
+                                <field name="variance_qty_percent" widget="percentage" class="oe_inline"/>
+                                <span>)</span>
+                            </div>
+                        </group>
+                        <group>
+                            <label for="total_estimated_cost" string="Costs"/>
+                            <div class="o_row">
+                                <field name="total_estimated_cost" class="oe_inline"/>
+                                <span>→</span>
+                                <field name="total_actual_cost" class="oe_inline"/>
+                                <span>=</span>
+                                <field name="variance_cost" class="oe_inline"/>
+                            </div>
+                        </group>
+                    </group>
+
+                    <group string="⏱️ Time Summary">
+                        <label for="total_estimated_time" string="Time (Hours)"/>
+                        <div class="o_row">
+                            <field name="total_estimated_time" widget="float_time" class="oe_inline"/>
+                            <span>→</span>
+                            <field name="total_actual_time" widget="float_time" class="oe_inline"/>
+                            <span>=</span>
+                            <field name="variance_time" widget="float_time" class="oe_inline"/>
+                        </div>
+                    </group>
+
+                    <notebook>
+                        <page string="📋 Operations Details" name="operations">
+                            <field name="cell_ids">
+                                <tree editable="bottom" decoration-success="material_issued and not is_over_tolerance" 
+                                      decoration-danger="is_over_tolerance" decoration-warning="variance_qty != 0 and not is_over_tolerance">
+                                    <field name="operation_name"/>
+                                    <field name="project_id"/>
+                                    <field name="evaluation_id"/>
+                                    <field name="operation_state" widget="badge"/>
+                                    <field name="estimated_quantity"/>
+                                    <field name="actual_quantity"/>
+                                    <field name="variance_qty"/>
+                                    <field name="variance_qty_percent" widget="percentage"/>
+                                    <field name="estimated_time" widget="float_time"/>
+                                    <field name="actual_time" widget="float_time"/>
+                                    <field name="variance_time" widget="float_time"/>
+                                    <field name="estimated_cost"/>
+                                    <field name="actual_cost"/>
+                                    <field name="variance_cost"/>
+                                    <field name="material_issued" widget="boolean_toggle"/>
+                                    <field name="is_over_tolerance" invisible="1"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="notes"/>
+                                    <button name="action_move_to_operation" string="" type="object"
+                                            icon="fa-exchange" title="Move to another operation"
+                                            invisible="estimated_quantity &lt;= 0"/>
+                                    <button name="action_issue_material" string="" type="object"
+                                            icon="fa-check" invisible="material_issued"
+                                            title="Issue material"/>
+                                    <button name="action_save_actual_data" string="" type="object"
+                                            icon="fa-save" title="Save actual data"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+
+                    <field name="matrix_id" invisible="1"/>
+                    <field name="part_id" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Matrix Wizard Form -->
+    <record id="view_steel_operation_matrix_form" model="ir.ui.view">
+        <field name="name">steel.operation.matrix.form</field>
+        <field name="model">steel.operation.matrix</field>
+        <field name="arch" type="xml">
+            <form string="Operation Parts Matrix">
+                <header>
+                    <button name="action_load_matrix" string="⚡ Load Matrix" type="object"
+                            class="btn-primary" invisible="is_approved"/>
+                    <button name="action_view_matrix" string="📊 View Details" type="object"
+                            class="btn-info" invisible="not matrix_line_ids"/>
+                    <button name="action_validate_actuals" string="✓ Validate Actuals" type="object"
+                            class="btn-success" invisible="not matrix_line_ids or is_approved"/>
+                    <button name="action_approve" string="✓✓ Approve Matrix" type="object"
+                            class="btn-success" invisible="not matrix_line_ids or is_approved"/>
+                    <field name="is_approved" widget="badge" decoration-success="is_approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_steel_operation_matrix)d" type="action"
+                                class="oe_stat_button" icon="fa-refresh">
+                            <field name="transaction_number" widget="statinfo" string="Transaction"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>Operation Parts Matrix</h1>
+                        <p>Professional control of estimated vs actual material, time and cost</p>
+                    </div>
+
+                    <div class="alert alert-success" role="alert" invisible="not is_approved">
+                        <strong>✓ Approved</strong>
+                        <p>
+                            Approved by: <field name="approved_by" readonly="1"/><br/>
+                            Approval date: <field name="approval_date" readonly="1"/>
+                        </p>
+                    </div>
+
+                    <group>
+                        <group string="📋 Transaction Info">
+                            <field name="transaction_number" readonly="1"/>
+                            <field name="transaction_date" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="📅 Date Filter">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="🏗️ Project Filter">
+                            <field name="project_ids" widget="many2many_tags" 
+                                   options="{'no_create': True}"/>
+                        </group>
+                        <group string="📦 Product Filter">
+                            <field name="product_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="🎯 Operation Filter">
+                            <field name="operation_filter_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="Leave empty to include all operations, or select specific operations..."/>
+                        </group>
+                        <group string="📋 Evaluation Filter">
+                            <field name="evaluation_filter_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"
+                                   placeholder="Filter by evaluations..."/>
+                        </group>
+                    </group>
+
+                    <group invisible="not matrix_line_ids">
+                        <group string="📊 Summary - Material Quantity">
+                            <field name="parts_count" string="Parts"/>
+                            <field name="operations_count" string="Operations"/>
+                            <field name="total_estimated_material_qty" string="Estimated Qty"/>
+                            <field name="total_actual_material_qty" string="Actual Qty"/>
+                            <field name="variance_material_qty" string="Qty Variance" 
+                                   decoration-danger="variance_material_qty &gt; 0"
+                                   decoration-success="variance_material_qty == 0"/>
+                        </group>
+                        <group string="💰 Summary - Material Cost">
+                            <field name="total_estimated_material_cost" string="Estimated Cost"/>
+                            <field name="total_actual_material_cost" string="Actual Cost"/>
+                            <field name="variance_material_cost" string="Cost Variance"
+                                   decoration-danger="variance_material_cost &gt; 0"
+                                   decoration-success="variance_material_cost == 0"/>
+                        </group>
+                        <group string="⏱️ Summary - Time">
+                            <field name="total_estimated_time" widget="float_time" string="Estimated"/>
+                            <field name="total_actual_time" widget="float_time" string="Actual"/>
+                            <field name="variance_time" widget="float_time" string="Variance"
+                                   decoration-danger="variance_time &gt; 0"
+                                   decoration-success="variance_time == 0"/>
+                        </group>
+                    </group>
+
+                    <notebook invisible="not matrix_line_ids">
+                        <page string="📊 Parts Matrix" name="matrix">
+                            <div class="alert alert-info" role="alert">
+                                <strong>ℹ️ Matrix Control Features</strong>
+                                <p>
+                                    • <strong>Project AND Evaluation tracking</strong> - Full integration<br/>
+                                    • <strong>Material Control</strong> - Quantity, Cost, Time (Estimated vs Actual)<br/>
+                                    • <strong>Green rows</strong> = Material issued, within tolerance<br/>
+                                    • <strong>Orange rows</strong> = Variance detected<br/>
+                                    • <strong>Red rows</strong> = Over tolerance limit (default 10%)<br/>
+                                    • <strong>Edit cells</strong> to enter actual quantities, time and costs<br/>
+                                    • <strong>Validate AND Approve</strong> for professional control
+                                </p>
+                            </div>
+
+                            <field name="matrix_line_ids" mode="tree">
+                                <tree decoration-warning="variance_qty != 0" decoration-danger="variance_qty_percent &gt; 10 or variance_qty_percent &lt; -10">
+                                    <field name="part_name"/>
+                                    <field name="part_number"/>
+                                    <field name="material_id"/>
+                                    <field name="unit_cost"/>
+                                    <field name="cells_count" string="Ops"/>
+                                    <field name="total_estimated_qty" sum="Est. Qty"/>
+                                    <field name="total_actual_qty" sum="Actual Qty"/>
+                                    <field name="variance_qty" sum="Qty Var."/>
+                                    <field name="variance_qty_percent" widget="percentage"/>
+                                    <field name="total_estimated_cost" sum="Est. Cost"/>
+                                    <field name="total_actual_cost" sum="Actual Cost"/>
+                                    <field name="variance_cost" sum="Cost Var."/>
+                                    <field name="total_estimated_time" widget="float_time" sum="Est. Time"/>
+                                    <field name="total_actual_time" widget="float_time" sum="Actual Time"/>
+                                    <field name="variance_time" widget="float_time" sum="Time Var."/>
+                                    <field name="currency_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="🎯 Selected Operations" name="operations">
+                            <field name="operation_ids" readonly="1">
+                                <tree>
+                                    <field name="display_name"/>
+                                    <field name="project_id"/>
+                                    <field name="product_id"/>
+                                    <field name="component_id"/>
+                                    <field name="evaluation_id"/>
+                                    <field name="operation_quantity"/>
+                                    <field name="start_date"/>
+                                    <field name="state" widget="badge"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="📝 Notes" name="notes">
+                            <field name="notes" placeholder="Matrix notes and observations..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Matrix Cell Form -->
+    <record id="view_steel_operation_matrix_cell_form" model="ir.ui.view">
+        <field name="name">steel.operation.matrix.cell.form</field>
+        <field name="model">steel.operation.matrix.cell</field>
+        <field name="arch" type="xml">
+            <form string="Part in Operation">
+                <header>
+                    <button name="action_move_to_operation" string="Move to Another Operation"
+                            type="object" class="btn-warning"
+                            invisible="estimated_quantity &lt;= 0"/>
+                    <button name="action_issue_material" string="Issue Material" type="object"
+                            class="btn-primary" invisible="material_issued"/>
+                    <button name="action_save_actual_data" string="Save Actual Data" type="object"
+                            class="btn-success"/>
+                    <field name="operation_state" widget="badge"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-success" role="alert" invisible="not material_issued">
+                        <strong>✓ Material Issued</strong>
+                    </div>
+                    
+                    <div class="alert alert-danger" role="alert" invisible="not is_over_tolerance">
+                        <strong>⚠️ WARNING: Variance exceeds tolerance limit!</strong>
+                        <p>Variance: <field name="variance_qty_percent" readonly="1" widget="percentage"/></p>
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert" invisible="variance_qty == 0 or is_over_tolerance">
+                        <strong>⚠️ Quantity Variance Detected</strong>
+                        <p>Variance: <field name="variance_qty" readonly="1"/> (<field name="variance_qty_percent" readonly="1" widget="percentage"/>)</p>
+                    </div>
+
+                    <group>
+                        <group string="📋 Operation Info">
+                            <field name="operation_name" readonly="1"/>
+                            <field name="project_id" readonly="1"/>
+                            <field name="evaluation_id" readonly="1"/>
+                            <field name="part_name" readonly="1"/>
+                            <field name="material_id" readonly="1"/>
+                            <field name="unit_cost"/>
+                        </group>
+                        <group string="✓ Status">
+                            <field name="material_issued" widget="boolean_toggle"/>
+                            <field name="is_over_tolerance" readonly="1" widget="boolean"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group string="📊 Material Quantities">
+                        <group>
+                            <field name="estimated_quantity"/>
+                            <field name="actual_quantity"/>
+                        </group>
+                        <group>
+                            <field name="variance_qty" readonly="1"/>
+                            <field name="variance_qty_percent" readonly="1" widget="percentage"/>
+                        </group>
+                    </group>
+
+                    <group string="💰 Material Costs">
+                        <group>
+                            <field name="estimated_cost"/>
+                            <field name="actual_cost" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="variance_cost" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="⏱️ Time (Hours)">
+                        <group>
+                            <field name="estimated_time" widget="float_time"/>
+                            <field name="actual_time" widget="float_time"/>
+                        </group>
+                        <group>
+                            <field name="variance_time" readonly="1" widget="float_time"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="notes" placeholder="Notes about this part in this operation..."/>
+                    </group>
+
+                    <field name="matrix_line_id" invisible="1"/>
+                    <field name="operation_id" invisible="1"/>
+                    <field name="part_id" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Move Wizard -->
+    <record id="view_steel_operation_move_wizard_form" model="ir.ui.view">
+        <field name="name">steel.operation.move.wizard.form</field>
+        <field name="model">steel.operation.move.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Move Quantity">
+                <group>
+                    <group>
+                        <field name="part_name" readonly="1"/>
+                        <field name="source_operation_name" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="available_quantity" readonly="1"/>
+                        <field name="quantity"/>
+                    </group>
+                </group>
+
+                <group>
+                    <field name="target_operation_id"/>
+                </group>
+
+                <footer>
+                    <button name="action_move" string="Move Quantity" type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+                
+                <field name="project_id" invisible="1"/>
+                <field name="source_cell_id" invisible="1"/>
+                <field name="part_id" invisible="1"/>
+                <field name="source_operation_id" invisible="1"/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open matrix -->
+    <record id="action_steel_operation_matrix" model="ir.actions.act_window">
+        <field name="name">Operation Parts Matrix</field>
+        <field name="res_model">steel.operation.matrix</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Operation Parts Matrix View
+            </p>
+            <p>
+                <strong>📊 Professional Matrix with Full Control:</strong>
+            </p>
+            <ul>
+                <li>✅ Material Control: Quantity, Cost, Time (Estimated vs Actual)</li>
+                <li>✅ Project integration with full tracking</li>
+                <li>✅ Evaluation integration for estimates</li>
+                <li>✅ Filter by operations from production components</li>
+                <li>✅ Transaction number and date tracking</li>
+                <li>✅ Automatic variance calculations (Qty %, Cost, Time)</li>
+                <li>✅ Professional tolerance control (default 10%)</li>
+                <li>✅ Color-coded alerts (green/orange/red)</li>
+                <li>✅ Move quantities between operations</li>
+                <li>✅ Issue materials and track consumption</li>
+                <li>✅ Validate actuals against tolerance limits</li>
+                <li>✅ Approval workflow for control</li>
+            </ul>
+        </field>
+    </record>
+
+    <!-- Add Sequence for Transaction Numbers -->
+    <record id="seq_steel_operation_matrix" model="ir.sequence">
+        <field name="name">Steel Operation Matrix Transaction</field>
+        <field name="code">steel.operation.matrix</field>
+        <field name="prefix">MATRIX/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>
+<!--```-->
+
+<!--Now restart and upgrade:-->
+<!--```bash-->
+<!--odoo-bin -u steel_structure_project -d your_database-->
+<!--```-->
+
+<!--## New Complete Features:-->
+
+<!--### ✅ Material Control-->
+<!-- - **Estimated Quantity** from evaluations/components-->
+<!-- - **Actual Quantity** entered during production-->
+<!-- - **Estimated Cost** calculated automatically-->
+<!-- - **Actual Cost** calculated from actual quantity-->
+<!-- - **Variance tracking** for Qty, Cost, Time-->
+
+<!--### ✅ Project Integration-->
+<!-- - Full project tracking in each cell-->
+<!-- - Project-based filtering-->
+<!-- - Project displayed in all views-->
+
+<!--### ✅ Evaluation Integration-->
+<!-- - Evaluation-based filtering-->
+<!-- - Estimated values from evaluations-->
+<!-- - Evaluation link in each cell-->
+
+<!--### ✅ Professional Controls-->
+<!-- - **Tolerance validation** (10% default)-->
+<!-- - **Approval workflow** with user and date-->
+<!-- - **Transaction tracking** with unique number-->
+<!-- - **Color coding**: Green (OK), Orange (variance), Red (over tolerance)-->
+
+<!--### ✅ Complete Tracking-->
+<!-- - **Material**: Qty + Cost (Estimated → Actual = Variance)-->
+<!-- - **Time**: Hours (Estimated → Actual = Variance)-->
+<!-- - **Status**: Material issued, Over tolerance flags-->
+
+<!--🚀 Professional production control matrix is complete!-->

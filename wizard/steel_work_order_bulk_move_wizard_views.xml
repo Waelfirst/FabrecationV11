@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Bulk Move Wizard Form View -->
+    <record id="wizard_steel_work_order_bulk_move_form" model="ir.ui.view">
+        <field name="name">steel.work.order.bulk.move.wizard.form</field>
+        <field name="model">steel.work.order.bulk.move.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Move Selected Parts">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <h4>
+                            <i class="fa fa-arrows"/> Bulk Move Parts
+                        </h4>
+                        <p>
+                            You have selected <strong><field name="work_order_count" readonly="1"/></strong> part(s) to move.
+                        </p>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="work_order_ids" invisible="1"/>
+                            <field name="current_stage_id" readonly="1"/>
+                            <field name="target_stage_id"
+                                   options="{'no_create': True}"
+                                   invisible="target_operation_id"
+                                   required="not target_operation_id"/>
+                            <label for="target_operation_id"/>
+                            <field name="target_operation_id"
+                                   options="{'no_create': True}"
+                                   invisible="target_stage_id"
+                                   required="not target_stage_id"/>
+                        </group>
+                        <group>
+                            <field name="update_time"/>
+                            <field name="additional_time" widget="float_time"
+                                   invisible="not update_time"/>
+                            <field name="update_workers"/>
+                            <field name="worker_ids" widget="many2many_tags"
+                                   invisible="not update_workers"/>
+                        </group>
+                    </group>
+
+                    <group string="Notes">
+                        <field name="notes" nolabel="1"
+                               placeholder="Reason for move, special instructions..."/>
+                    </group>
+
+                    <group string="Selected Parts">
+                        <field name="work_order_ids" nolabel="1" readonly="1">
+                            <tree>
+                                <field name="part_name"/>
+                                <field name="material_id"/>
+                                <field name="quantity_planned"/>
+                                <field name="actual_time" widget="float_time"/>
+                                <field name="state"/>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Move Parts" name="action_move_parts"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Bulk Move Action -->
+    <record id="action_steel_work_order_bulk_move" model="ir.actions.act_window">
+        <field name="name">Bulk Move Parts</field>
+        <field name="res_model">steel.work.order.bulk.move.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="steel_structure_project.model_steel_work_order"/>
+        <field name="binding_view_types">list</field>
+    </record>
+
+</odoo>

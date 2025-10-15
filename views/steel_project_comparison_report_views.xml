@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Comparison Report Tree View -->
+    <record id="view_steel_comparison_report_tree" model="ir.ui.view">
+        <field name="name">steel.project.comparison.report.tree</field>
+        <field name="model">steel.project.comparison.report</field>
+        <field name="arch" type="xml">
+            <tree string="Standard vs Actual Comparison"
+                  create="false" edit="false" delete="false"
+                  decoration-danger="is_over_budget == True"
+                  decoration-warning="is_over_time == True">
+                <field name="project_id"/>
+                <field name="customer_id"/>
+                <field name="component_id"/>
+                <field name="part_name"/>
+                <field name="stage_name"/>
+
+                <!-- Quantity -->
+                <field name="standard_quantity" string="Std Qty"/>
+                <field name="actual_quantity" string="Actual Qty"/>
+                <field name="quantity_variance"
+                       decoration-danger="quantity_variance > 0"
+                       decoration-success="quantity_variance &lt; 0"/>
+                <field name="quantity_variance_pct" widget="percentage" optional="show"/>
+
+                <!-- Material Cost -->
+                <field name="standard_material_cost" string="Std Material" optional="show"/>
+                <field name="actual_material_cost" string="Actual Material" optional="show"/>
+                <field name="material_cost_variance"
+                       decoration-danger="material_cost_variance > 0"
+                       decoration-success="material_cost_variance &lt; 0"/>
+                <field name="material_cost_variance_pct" widget="percentage" optional="hide"/>
+
+                <!-- Time -->
+                <field name="standard_time" widget="float_time" string="Std Time"/>
+                <field name="actual_time" widget="float_time" string="Actual Time"/>
+                <field name="time_variance" widget="float_time"
+                       decoration-danger="time_variance > 0"
+                       decoration-success="time_variance &lt; 0"/>
+                <field name="time_variance_pct" widget="percentage" optional="show"/>
+
+                <!-- Labor Cost -->
+                <field name="standard_labor_cost" string="Std Labor" optional="show"/>
+                <field name="actual_labor_cost" string="Actual Labor" optional="show"/>
+                <field name="labor_cost_variance"
+                       decoration-danger="labor_cost_variance > 0"
+                       decoration-success="labor_cost_variance &lt; 0"
+                       optional="show"/>
+
+                <!-- Total Cost -->
+                <field name="standard_total_cost" string="Std Total"/>
+                <field name="actual_total_cost" string="Actual Total"/>
+                <field name="total_cost_variance"
+                       decoration-danger="total_cost_variance > 0"
+                       decoration-success="total_cost_variance &lt; 0"/>
+                <field name="total_cost_variance_pct" widget="percentage"/>
+
+                <!-- Status Flags -->
+                <field name="is_over_budget" invisible="1"/>
+                <field name="is_over_time" invisible="1"/>
+                <field name="currency_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Comparison Report Form View -->
+    <record id="view_steel_comparison_report_form" model="ir.ui.view">
+        <field name="name">steel.project.comparison.report.form</field>
+        <field name="model">steel.project.comparison.report</field>
+        <field name="arch" type="xml">
+            <form string="Comparison Details" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="part_name" readonly="1"/>
+                        </h1>
+                        <div class="text-muted">
+                            Stage: <field name="stage_name" readonly="1"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Project Information">
+                            <field name="project_id"/>
+                            <field name="customer_id"/>
+                            <field name="product_id"/>
+                            <field name="component_id"/>
+                            <field name="material_id"/>
+                        </group>
+                        <group string="Status">
+                            <field name="is_over_budget" widget="boolean"/>
+                            <field name="is_over_time" widget="boolean"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Quantity Analysis" name="quantity">
+                            <group>
+                                <group>
+                                    <field name="standard_quantity"/>
+                                    <field name="actual_quantity"/>
+                                </group>
+                                <group>
+                                    <field name="quantity_variance"
+                                           decoration-danger="quantity_variance > 0"
+                                           decoration-success="quantity_variance &lt; 0"/>
+                                    <field name="quantity_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Material Cost Analysis" name="material">
+                            <group>
+                                <group string="Standard">
+                                    <field name="standard_material_cost" widget="monetary"/>
+                                </group>
+                                <group string="Actual">
+                                    <field name="actual_material_cost" widget="monetary"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Variance">
+                                    <field name="material_cost_variance" widget="monetary"
+                                           decoration-danger="material_cost_variance > 0"
+                                           decoration-success="material_cost_variance &lt; 0"/>
+                                    <field name="material_cost_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Time Analysis" name="time">
+                            <group>
+                                <group>
+                                    <field name="standard_time" widget="float_time"/>
+                                    <field name="actual_time" widget="float_time"/>
+                                </group>
+                                <group>
+                                    <field name="time_variance" widget="float_time"
+                                           decoration-danger="time_variance > 0"
+                                           decoration-success="time_variance &lt; 0"/>
+                                    <field name="time_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Labor Cost Analysis" name="labor">
+                            <group>
+                                <group string="Standard">
+                                    <field name="standard_labor_cost" widget="monetary"/>
+                                </group>
+                                <group string="Actual">
+                                    <field name="actual_labor_cost" widget="monetary"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Variance">
+                                    <field name="labor_cost_variance" widget="monetary"
+                                           decoration-danger="labor_cost_variance > 0"
+                                           decoration-success="labor_cost_variance &lt; 0"/>
+                                    <field name="labor_cost_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Total Cost Analysis" name="total">
+                            <group>
+                                <group string="Standard">
+                                    <field name="standard_total_cost" widget="monetary"/>
+                                </group>
+                                <group string="Actual">
+                                    <field name="actual_total_cost" widget="monetary"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Variance">
+                                    <field name="total_cost_variance" widget="monetary"
+                                           decoration-danger="total_cost_variance > 0"
+                                           decoration-success="total_cost_variance &lt; 0"
+                                           class="oe_subtotal_footer_separator"/>
+                                    <field name="total_cost_variance_pct" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Comparison Report Pivot View -->
+    <record id="view_steel_comparison_report_pivot" model="ir.ui.view">
+        <field name="name">steel.project.comparison.report.pivot</field>
+        <field name="model">steel.project.comparison.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Comparison Analysis">
+                <field name="project_id" type="row"/>
+                <field name="part_name" type="row"/>
+                <field name="standard_material_cost" type="measure"/>
+                <field name="actual_material_cost" type="measure"/>
+                <field name="material_cost_variance" type="measure"/>
+                <field name="standard_labor_cost" type="measure"/>
+                <field name="actual_labor_cost" type="measure"/>
+                <field name="labor_cost_variance" type="measure"/>
+                <field name="standard_total_cost" type="measure"/>
+                <field name="actual_total_cost" type="measure"/>
+                <field name="total_cost_variance" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Comparison Report Graph View -->
+    <record id="view_steel_comparison_report_graph" model="ir.ui.view">
+        <field name="name">steel.project.comparison.report.graph</field>
+        <field name="model">steel.project.comparison.report</field>
+        <field name="arch" type="xml">
+            <graph string="Standard vs Actual Analysis" type="bar">
+                <field name="part_name"/>
+                <field name="standard_total_cost" type="measure"/>
+                <field name="actual_total_cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Comparison Report Search View -->
+    <record id="view_steel_comparison_report_search" model="ir.ui.view">
+        <field name="name">steel.project.comparison.report.search</field>
+        <field name="model">steel.project.comparison.report</field>
+        <field name="arch" type="xml">
+            <search string="Search Comparison Report">
+                <field name="project_id"/>
+                <field name="customer_id"/>
+                <field name="component_id"/>
+                <field name="part_name"/>
+                <field name="stage_name"/>
+
+                <filter string="Over Budget" name="over_budget"
+                        domain="[('is_over_budget', '=', True)]"/>
+                <filter string="Over Time" name="over_time"
+                        domain="[('is_over_time', '=', True)]"/>
+                <filter string="Under Budget" name="under_budget"
+                        domain="[('total_cost_variance', '&lt;', 0)]"/>
+                <separator/>
+                <filter string="Material Variance" name="material_variance"
+                        domain="[('material_cost_variance', '!=', 0)]"/>
+                <filter string="Labor Variance" name="labor_variance"
+                        domain="[('labor_cost_variance', '!=', 0)]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project"
+                            context="{'group_by': 'project_id'}"/>
+                    <filter string="Customer" name="group_customer"
+                            context="{'group_by': 'customer_id'}"/>
+                    <filter string="Component" name="group_component"
+                            context="{'group_by': 'component_id'}"/>
+                    <filter string="Part" name="group_part"
+                            context="{'group_by': 'part_name'}"/>
+                    <filter string="Stage" name="group_stage"
+                            context="{'group_by': 'stage_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Comparison Report Action -->
+    <record id="action_steel_comparison_report" model="ir.actions.act_window">
+        <field name="name">Standard vs Actual Comparison</field>
+        <field name="res_model">steel.project.comparison.report</field>
+        <field name="view_mode">tree,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_steel_comparison_report_search"/>
+        <field name="context">{'search_default_group_project': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No comparison data available
+            </p>
+            <p>
+                This report compares standard/evaluation costs with actual costs.<br/>
+                Data will appear once you have:
+            </p>
+            <ul>
+                <li>Created project components with parts and stages</li>
+                <li>Completed work orders with actual time and materials</li>
+            </ul>
+        </field>
+    </record>
+
+</odoo>

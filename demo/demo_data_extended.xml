@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- This file contains extended demo data that references the basic demo data -->
+        <!-- It should be loaded after demo_data.xml -->
+
+        <!-- Note: To add parts and stages, you need to find the component_id first -->
+        <!-- This can be done through the UI or via Python code -->
+        <!-- The examples below show the structure but may need adjustment -->
+
+        <!-- Example: To add demo parts and stages programmatically,
+             use the Odoo shell or create them through the UI -->
+
+    </data>
+</odoo>

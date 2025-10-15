@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ========================================== -->
+    <!-- OPERATION STAGE TREE VIEW                 -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_operation_stage_tree" model="ir.ui.view">
+        <field name="name">steel.operation.stage.tree</field>
+        <field name="model">steel.operation.stage</field>
+        <field name="arch" type="xml">
+            <tree string="Operation Stages" editable="bottom"
+                  decoration-success="state == 'completed'"
+                  decoration-warning="state == 'in_progress'"
+                  decoration-muted="state == 'pending'">
+                <field name="sequence" widget="handle"/>
+                <field name="stage_name"/>
+                <field name="part_name" readonly="1"/>
+                <field name="estimated_time" widget="float_time" readonly="1"/>
+                <field name="actual_time" widget="float_time"/>
+                <field name="time_variance" widget="float_time" readonly="1"
+                       decoration-danger="time_variance > 0"
+                       decoration-success="time_variance &lt;= 0"/>
+                <field name="hourly_rate" readonly="1"/>
+                <field name="estimated_cost" widget="monetary" readonly="1"/>
+                <field name="actual_labor_cost" widget="monetary" readonly="1"/>
+                <field name="cost_variance" widget="monetary" readonly="1"
+                       decoration-danger="cost_variance > 0"
+                       decoration-success="cost_variance &lt;= 0"/>
+                <field name="worker_ids" widget="many2many_tags"/>
+                <field name="state" widget="badge"/>
+                <button name="action_start" string="Start" type="object"
+                        icon="fa-play" invisible="state != 'pending'"/>
+                <button name="action_complete" string="Complete" type="object"
+                        icon="fa-check" invisible="state != 'in_progress'"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="stage_id" column_invisible="1"/>
+                <field name="part_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- OPERATION STAGE FORM VIEW                 -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_operation_stage_form" model="ir.ui.view">
+        <field name="name">steel.operation.stage.form</field>
+        <field name="model">steel.operation.stage</field>
+        <field name="arch" type="xml">
+            <form string="Operation Stage">
+                <header>
+                    <button name="action_start" string="Start" type="object"
+                            class="oe_highlight" invisible="state != 'pending'"/>
+                    <button name="action_complete" string="Complete" type="object"
+                            class="btn-success" invisible="state != 'in_progress'"/>
+                    <button name="action_reset" string="Reset" type="object"
+                            invisible="state == 'pending'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="stage_name" readonly="1"/></h1>
+                        <div class="text-muted">
+                            <i class="fa fa-cube"/> Part: <field name="part_name" readonly="1"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Stage Information">
+                            <field name="operation_id" readonly="1"/>
+                            <field name="stage_id" readonly="1"/>
+                            <field name="sequence"/>
+                            <field name="part_id" readonly="1"/>
+                        </group>
+                        <group string="Dates">
+                            <field name="start_date" readonly="1"/>
+                            <field name="end_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="⏱️ Time Tracking">
+                        <group>
+                            <label for="estimated_time" string="Standard Time"/>
+                            <div>
+                                <field name="estimated_time" widget="float_time" readonly="1" class="text-muted"/>
+                                <span class="text-muted"> hours</span>
+                            </div>
+
+                            <label for="actual_time" string="Actual Time" class="fw-bold"/>
+                            <div>
+                                <field name="actual_time" widget="float_time" class="text-primary fw-bold"/>
+                                <span> hours</span>
+                            </div>
+                        </group>
+                        <group>
+                            <label for="time_variance" string="Variance"/>
+                            <div>
+                                <field name="time_variance" widget="float_time" readonly="1"
+                                       decoration-danger="time_variance > 0"
+                                       decoration-success="time_variance &lt;= 0"
+                                       class="fw-bold"/>
+                                <span> hours</span>
+                            </div>
+                        </group>
+                    </group>
+
+                    <group string="💰 Cost Tracking">
+                        <group>
+                            <field name="hourly_rate" readonly="1"/>
+
+                            <label for="estimated_cost" string="Standard Cost"/>
+                            <div>
+                                <field name="estimated_cost" widget="monetary" readonly="1" class="text-muted"/>
+                            </div>
+
+                            <label for="actual_labor_cost" string="Actual Cost" class="fw-bold"/>
+                            <div>
+                                <field name="actual_labor_cost" widget="monetary" readonly="1" class="text-success fw-bold"/>
+                            </div>
+                        </group>
+                        <group>
+                            <label for="cost_variance" string="Variance"/>
+                            <div>
+                                <field name="cost_variance" widget="monetary" readonly="1"
+                                       decoration-danger="cost_variance > 0"
+                                       decoration-success="cost_variance &lt;= 0"
+                                       class="fw-bold"/>
+                            </div>
+                        </group>
+                    </group>
+
+                    <field name="currency_id" invisible="1"/>
+
+                    <notebook>
+                        <page string="👷 Workers" name="workers">
+                            <field name="worker_ids" widget="many2many_tags"/>
+                        </page>
+
+                        <page string="📝 Notes" name="notes">
+                            <field name="notes" placeholder="Stage notes, issues, observations..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- OPERATION FORM VIEW                       -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_project_operation_form" model="ir.ui.view">
+        <field name="name">steel.project.operation.form</field>
+        <field name="model">steel.project.operation</field>
+        <field name="arch" type="xml">
+            <form string="Production Operation">
+                <header>
+                    <button name="action_generate_operation_stages_from_evaluation"
+                            string="🔄 Generate Stages from Evaluation"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state != 'draft'"
+                            help="Create operation stages with standard data from evaluation"/>
+                    <button name="action_start" string="Start" type="object"
+                            class="oe_highlight" invisible="state not in ['draft', 'ready']"/>
+                    <button name="action_done" string="Complete" type="object"
+                            class="btn-success" invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ['done', 'cancel']"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,ready,in_progress,done"/>
+                </header>
+
+                <sheet>
+                    <!-- Quantity Warning Alert -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="remaining_quantity &gt;= operation_quantity or state != 'draft'">
+                        <strong>⚠️ Warning:</strong> Operation quantity exceeds remaining quantity!
+                        <ul class="mb-0 mt-2">
+                            <li>Product Total: <strong><field name="product_total_quantity" readonly="1"/></strong></li>
+                            <li>Already Produced: <strong><field name="already_produced_quantity" readonly="1"/></strong></li>
+                            <li>Remaining: <strong><field name="remaining_quantity" readonly="1"/></strong></li>
+                            <li>This Operation: <strong><field name="operation_quantity" readonly="1"/></strong></li>
+                        </ul>
+                    </div>
+
+                    <!-- Success Alert when quantity matches -->
+                    <div class="alert alert-success" role="alert"
+                         invisible="remaining_quantity &lt; operation_quantity or remaining_quantity == 0 or state != 'draft'">
+                        <strong>✅ Production Status:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Product Total: <strong><field name="product_total_quantity" readonly="1"/></strong></li>
+                            <li>Already Produced: <strong><field name="already_produced_quantity" readonly="1"/></strong></li>
+                            <li>Remaining: <strong><field name="remaining_quantity" readonly="1"/></strong></li>
+                            <li>This Operation: <strong><field name="operation_quantity" readonly="1"/></strong></li>
+                        </ul>
+                    </div>
+
+                    <!-- Info Alert when completed -->
+                    <div class="alert alert-info" role="alert"
+                         invisible="remaining_quantity &gt; 0 or state == 'draft'">
+                        <strong>ℹ️ All quantity for this product has been produced!</strong>
+                    </div>
+
+                    <!-- Top Info Bar -->
+                    <div class="oe_title">
+                        <h1><field name="display_name" readonly="1"/></h1>
+                        <div class="text-muted">
+                            <i class="fa fa-user"/> <field name="customer_id" readonly="1"/>
+                        </div>
+                    </div>
+
+                    <!-- Main Selection -->
+                    <group>
+                        <group string="Selection">
+                            <field name="project_id" options="{'no_create': True}"/>
+                            <field name="evaluation_id"
+                                   domain="[('project_id', '=', project_id)]"
+                                   options="{'no_create': True}"/>
+                            <field name="product_id"
+                                   domain="[('project_id', '=', project_id)]"
+                                   options="{'no_create': True}"/>
+                            <field name="component_id" readonly="1"/>
+                            <field name="operation_date"/>
+                        </group>
+                        <group string="Quantity Tracking">
+                            <label for="product_total_quantity" string="Product Total Quantity"/>
+                            <div>
+                                <field name="product_total_quantity" readonly="1" class="oe_inline"/>
+                                <span class="text-muted"> (from product definition)</span>
+                            </div>
+
+                            <label for="already_produced_quantity" string="Already Produced"/>
+                            <div>
+                                <field name="already_produced_quantity" readonly="1" class="oe_inline text-success"/>
+                                <span class="text-muted"> (in other operations)</span>
+                            </div>
+
+                            <label for="remaining_quantity" string="Remaining to Produce"/>
+                            <div>
+                                <field name="remaining_quantity" readonly="1" class="oe_inline text-primary fw-bold"/>
+                            </div>
+
+                            <field name="operation_quantity"
+                                   class="fw-bold"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Progress">
+                            <field name="total_operation_stages" readonly="1"/>
+                            <field name="completed_operation_stages" readonly="1"/>
+                            <field name="progress_percentage" widget="progressbar"/>
+                        </group>
+                        <group string="Costs">
+                            <field name="total_actual_time" widget="float_time" readonly="1"/>
+                            <field name="total_actual_cost" widget="monetary" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Instructions -->
+                    <div class="alert alert-info" role="alert" invisible="state != 'draft'">
+                        <strong>📌 Quick Start Guide:</strong><br/>
+                        <strong>Step 1:</strong> Select Project, Evaluation (optional), and Product<br/>
+                        <strong>Step 2:</strong> Set the Operation Quantity (defaults to remaining quantity)<br/>
+                        <strong>Step 3:</strong> Click "🔄 Generate Stages from Evaluation"<br/>
+                        <strong>Step 4:</strong> Track actual time and assign workers in the stages tab
+                    </div>
+
+                    <!-- Tabs -->
+                    <notebook>
+                        <page string="🏭 Operation Stages" name="operation_stages">
+                            <field name="operation_stage_ids" context="{'default_operation_id': id}"/>
+                        </page>
+
+                        <page string="📦 Materials Used" name="materials">
+                            <field name="actual_material_ids">
+                                <tree editable="bottom">
+                                    <field name="material_id"/>
+                                    <field name="part_id"/>
+                                    <field name="consumed_quantity" sum="Total"/>
+                                    <field name="uom_id" readonly="1"/>
+                                    <field name="unit_cost" readonly="1"/>
+                                    <field name="total_cost" sum="Total Cost" readonly="1"/>
+                                    <field name="usage_date"/>
+                                    <field name="notes"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="📝 Notes" name="notes">
+                            <field name="notes" placeholder="Operation notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- OPERATION TREE VIEW                       -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_project_operation_tree" model="ir.ui.view">
+        <field name="name">steel.project.operation.tree</field>
+        <field name="model">steel.project.operation</field>
+        <field name="arch" type="xml">
+            <tree string="Operations"
+                  decoration-info="state == 'draft'"
+                  decoration-warning="state == 'ready'"
+                  decoration-primary="state == 'in_progress'"
+                  decoration-success="state == 'done'"
+                  decoration-muted="state == 'cancel'">
+                <field name="display_name"/>
+                <field name="project_id"/>
+                <field name="evaluation_id"/>
+                <field name="product_id"/>
+                <field name="customer_id"/>
+                <field name="product_total_quantity"/>
+                <field name="already_produced_quantity"/>
+                <field name="remaining_quantity"/>
+                <field name="operation_quantity" sum="Total Operation Qty"/>
+                <field name="operation_date"/>
+                <field name="total_operation_stages"/>
+                <field name="completed_operation_stages"/>
+                <field name="progress_percentage" widget="progressbar"/>
+                <field name="total_actual_time" widget="float_time"/>
+                <field name="total_actual_cost" widget="monetary"/>
+                <field name="state" widget="badge"/>
+                <field name="currency_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- OPERATION KANBAN VIEW                     -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_project_operation_kanban" model="ir.ui.view">
+        <field name="name">steel.project.operation.kanban</field>
+        <field name="model">steel.project.operation</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="display_name"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <field name="customer_id"/>
+                <field name="state"/>
+                <field name="operation_quantity"/>
+                <field name="remaining_quantity"/>
+                <field name="total_operation_stages"/>
+                <field name="completed_operation_stages"/>
+                <field name="progress_percentage"/>
+                <field name="total_actual_cost"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="display_name"/>
+                                    </strong>
+                                </div>
+                                <span class="badge float-end"
+                                      t-attf-class="badge-{{state == 'done' ? 'success' : state == 'in_progress' ? 'primary' : state == 'ready' ? 'warning' : 'secondary'}}">
+                                    <field name="state"/>
+                                </span>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <span class="fa fa-user"/> <field name="customer_id"/>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <strong>Operation Qty:</strong> <field name="operation_quantity"/>
+                                        <span class="text-muted">/ Remaining: <field name="remaining_quantity"/></span>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-6">
+                                        <span class="fa fa-tasks"/>
+                                        <field name="completed_operation_stages"/>/<field name="total_operation_stages"/> Stages
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <field name="progress_percentage" widget="progressbar"/>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <strong>Cost: </strong>
+                                        <field name="total_actual_cost" widget="monetary"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- OPERATION SEARCH VIEW                     -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_project_operation_search" model="ir.ui.view">
+        <field name="name">steel.project.operation.search</field>
+        <field name="model">steel.project.operation</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="display_name"/>
+                <field name="project_id"/>
+                <field name="evaluation_id"/>
+                <field name="product_id"/>
+                <field name="customer_id"/>
+
+                <!-- State Filters -->
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Ready" name="ready" domain="[('state', '=', 'ready')]"/>
+                <filter string="In Progress" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Done" name="done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+
+                <!-- Quantity Filters -->
+                <filter string="Has Remaining Quantity" name="has_remaining"
+                        domain="[('remaining_quantity', '>', 0)]"/>
+                <filter string="Fully Produced" name="fully_produced"
+                        domain="[('remaining_quantity', '=', 0)]"/>
+                <separator/>
+
+                <!-- Additional Filters -->
+                <filter string="Has Evaluation" name="has_evaluation" domain="[('evaluation_id', '!=', False)]"/>
+                <filter string="With Stages" name="has_stages" domain="[('total_operation_stages', '>', 0)]"/>
+
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'customer_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Operation Date" name="group_date" context="{'group_by': 'operation_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- OPERATION STAGE KANBAN VIEW               -->
+    <!-- ========================================== -->
+
+    <record id="view_steel_operation_stage_kanban" model="ir.ui.view">
+        <field name="name">steel.operation.stage.kanban</field>
+        <field name="model">steel.operation.stage</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="id"/>
+                <field name="stage_name"/>
+                <field name="part_name"/>
+                <field name="estimated_time"/>
+                <field name="actual_time"/>
+                <field name="time_variance"/>
+                <field name="estimated_cost"/>
+                <field name="actual_labor_cost"/>
+                <field name="cost_variance"/>
+                <field name="state"/>
+                <field name="currency_id"/>
+
+                <progressbar field="state"
+                             colors='{"completed": "success", "in_progress": "warning", "pending": "muted"}'/>
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top mb-2">
+                                    <strong class="o_kanban_record_title">
+                                        <i class="fa fa-cog text-primary"/>
+                                        <field name="stage_name"/>
+                                    </strong>
+                                </div>
+
+                                <div class="text-muted small mb-2">
+                                    <i class="fa fa-cube"/> <field name="part_name"/>
+                                </div>
+
+                                <!-- Time Card -->
+                                <div class="card mb-2" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                                    <div class="card-body p-2">
+                                        <div class="row small">
+                                            <div class="col-6">
+                                                <div class="text-muted">⏱️ Standard</div>
+                                                <strong><field name="estimated_time" widget="float_time"/>h</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-muted">✅ Actual</div>
+                                                <strong class="text-primary">
+                                                    <field name="actual_time" widget="float_time"/>h
+                                                </strong>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1" t-if="record.time_variance.raw_value !== 0">
+                                            <span t-attf-class="badge {{record.time_variance.raw_value > 0 ? 'bg-danger' : 'bg-success'}}">
+                                                <t t-if="record.time_variance.raw_value > 0">+</t>
+                                                <field name="time_variance" widget="float_time"/>h
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Cost Card -->
+                                <div class="card" style="background-color: #fff3cd; border: 1px solid #ffc107;">
+                                    <div class="card-body p-2">
+                                        <div class="row small">
+                                            <div class="col-6">
+                                                <div class="text-muted">💰 Standard</div>
+                                                <strong><field name="estimated_cost" widget="monetary"/></strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-muted">✅ Actual</div>
+                                                <strong class="text-success">
+                                                    <field name="actual_labor_cost" widget="monetary"/>
+                                                </strong>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1" t-if="record.cost_variance.raw_value !== 0">
+                                            <span t-attf-class="badge {{record.cost_variance.raw_value > 0 ? 'bg-danger' : 'bg-success'}}">
+                                                <t t-if="record.cost_variance.raw_value > 0">+</t>
+                                                <field name="cost_variance" widget="monetary"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="o_kanban_record_bottom mt-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button name="action_start" type="object"
+                                                class="btn btn-sm btn-primary"
+                                                t-if="record.state.raw_value === 'pending'">
+                                            <i class="fa fa-play"/> Start
+                                        </button>
+                                        <button name="action_complete" type="object"
+                                                class="btn btn-sm btn-success"
+                                                t-if="record.state.raw_value === 'in_progress'">
+                                            <i class="fa fa-check"/> Complete
+                                        </button>
+                                        <span t-if="record.state.raw_value === 'completed'"
+                                              class="badge bg-success">
+                                            <i class="fa fa-check-circle"/> Completed
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- ACTIONS                                   -->
+    <!-- ========================================== -->
+
+    <!-- Operations Action -->
+    <record id="action_steel_project_operation" model="ir.actions.act_window">
+        <field name="name">Production Operations</field>
+        <field name="res_model">steel.project.operation</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="search_view_id" ref="view_steel_project_operation_search"/>
+        <field name="context">{'search_default_in_progress': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Your First Operation!
+            </p>
+            <p>
+                <strong>📋 How It Works:</strong>
+            </p>
+            <ol>
+                <li>Select <strong>Project</strong> and <strong>Product</strong></li>
+                <li>System shows <strong>Total Quantity</strong>, <strong>Already Produced</strong>, and <strong>Remaining</strong></li>
+                <li>Set <strong>Operation Quantity</strong> (can be less than or equal to remaining)</li>
+                <li>Click <strong>"Generate Stages from Evaluation"</strong> to create operation stages</li>
+                <li>Track actual time and costs in each stage</li>
+                <li>Create multiple operations until all quantity is produced</li>
+            </ol>
+            <p class="mt-3">
+                <strong>✨ Features:</strong>
+            </p>
+            <ul>
+                <li>✅ Track production progress by quantity</li>
+                <li>✅ Prevent over-production (system alerts if exceeding remaining quantity)</li>
+                <li>✅ Multiple operations per product (for batch production)</li>
+                <li>✅ Operation stages with time and cost tracking</li>
+                <li>✅ Compare actual vs standard costs</li>
+            </ul>
+        </field>
+    </record>
+
+    <!-- Operation Stages Action -->
+    <record id="action_steel_operation_stages" model="ir.actions.act_window">
+        <field name="name">Operation Stages</field>
+        <field name="res_model">steel.operation.stage</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Operation Stages Yet
+            </p>
+            <p>
+                Operation stages are created automatically when you generate stages from an operation.
+            </p>
+        </field>
+    </record>
+
+</odoo>

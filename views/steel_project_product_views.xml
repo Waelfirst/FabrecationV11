@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Steel Project Product Tree View -->
+    <record id="view_steel_project_product_tree" model="ir.ui.view">
+        <field name="name">steel.project.product.tree</field>
+        <field name="model">steel.project.product</field>
+        <field name="arch" type="xml">
+            <tree string="Project Products" editable="bottom"
+                  decoration-info="state=='draft'"
+                  decoration-success="state=='done'"
+                  decoration-muted="state=='cancelled'">
+                <field name="sequence" widget="handle"/>
+                <field name="product_id" options="{'no_create_edit': True}"/>
+                <field name="product_code"/>
+                <field name="description"/>
+                <field name="customer_id" optional="show"/>
+                <field name="quantity"/>
+                <field name="uom_id"/>
+                <field name="unit_price"/>
+                <field name="subtotal" sum="Total"/>
+                <field name="state" widget="badge"
+                       decoration-info="state=='draft'"
+                       decoration-success="state=='done'"
+                       decoration-warning="state=='confirmed'"
+                       decoration-danger="state=='cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Steel Project Product Form View -->
+    <record id="view_steel_project_product_form" model="ir.ui.view">
+        <field name="name">steel.project.product.form</field>
+        <field name="model">steel.project.product</field>
+        <field name="arch" type="xml">
+            <form string="Project Product">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Done" type="object"
+                            class="oe_highlight" invisible="state != 'confirmed'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ['done', 'cancelled']"/>
+                    <button name="action_draft" string="Reset to Draft" type="object"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="product_id" options="{'no_create_edit': True}"/>
+                            <field name="product_code"/>
+                            <field name="product_category_id"/>
+                        </group>
+                        <group>
+                            <field name="customer_id"/>
+                            <field name="quantity"/>
+                            <field name="uom_id"/>
+                            <field name="unit_price"/>
+                            <field name="subtotal"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Product description..."/>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Additional notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Steel Project Product Search View -->
+    <record id="view_steel_project_product_search" model="ir.ui.view">
+        <field name="name">steel.project.product.search</field>
+        <field name="model">steel.project.product</field>
+        <field name="arch" type="xml">
+            <search string="Search Project Products">
+                <field name="product_id"/>
+                <field name="product_code"/>
+                <field name="project_id"/>
+                <field name="customer_id"/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state','=','confirmed')]"/>
+                <filter string="Done" name="done" domain="[('state','=','done')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project" context="{'group_by':'project_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by':'product_id'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by':'customer_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Steel Project Product Action -->
+    <record id="action_steel_project_product" model="ir.actions.act_window">
+        <field name="name">Project Products</field>
+        <field name="res_model">steel.project.product</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_steel_project_product_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Project Product
+            </p>
+            <p>
+                Track products for your steel structure projects.
+            </p>
+        </field>
+    </record>
+</odoo>

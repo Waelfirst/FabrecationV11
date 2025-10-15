@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ========================================== -->
+    <!-- ROOT MENU                                  -->
+    <!-- ========================================== -->
+
+    <menuitem id="menu_steel_main"
+              name="Steel Structure"
+              web_icon="steel_structure_project,static/description/icon.png"
+              sequence="5"/>
+
+    <!-- ========================================== -->
+    <!-- MAIN SECTIONS                              -->
+    <!-- ========================================== -->
+
+    <!-- Projects Section -->
+    <menuitem id="menu_steel_projects"
+              name="Projects"
+              parent="menu_steel_main"
+              sequence="10"/>
+
+    <!-- Production Section -->
+    <menuitem id="menu_steel_production"
+              name="Production"
+              parent="menu_steel_main"
+              sequence="20"/>
+
+    <!-- Configuration Section -->
+    <menuitem id="menu_steel_configuration"
+              name="Configuration"
+              parent="menu_steel_main"
+              sequence="100"/>
+
+    <!-- ========================================== -->
+    <!-- PROJECTS MENU ITEMS                        -->
+    <!-- ========================================== -->
+
+    <menuitem id="menu_steel_project_list"
+              name="All Projects"
+              parent="menu_steel_projects"
+              action="action_steel_project"
+              sequence="10"/>
+
+    <menuitem id="menu_steel_project_products"
+              name="Products"
+              parent="menu_steel_projects"
+              action="action_steel_project_product"
+              sequence="20"/>
+
+    <menuitem id="menu_steel_project_components"
+              name="Components"
+              parent="menu_steel_projects"
+              action="action_steel_project_components"
+              sequence="30"/>
+
+    <menuitem id="menu_steel_project_evaluation"
+              name="Evaluations"
+              parent="menu_steel_projects"
+              action="action_steel_project_evaluation"
+              sequence="40"/>
+
+    <!-- ========================================== -->
+    <!-- PRODUCTION MENU ITEMS                      -->
+    <!-- ========================================== -->
+
+    <menuitem id="menu_steel_operations"
+              name="Operations"
+              parent="menu_steel_production"
+              action="action_steel_project_operation"
+              sequence="10"/>
+
+    <menuitem id="menu_steel_operation_stages"
+              name="Operation Stages"
+              parent="menu_steel_production"
+              action="action_steel_operation_stages"
+              sequence="20"/>
+
+    <!-- ========================================== -->
+    <!-- CONFIGURATION MENU ITEMS                   -->
+    <!-- ========================================== -->
+
+    <menuitem id="menu_steel_config_master"
+              name="Master Data"
+              parent="menu_steel_configuration"
+              sequence="10"/>
+
+    <menuitem id="menu_steel_materials"
+              name="Materials"
+              parent="menu_steel_config_master"
+              action="product.product_normal_action_sell"
+              sequence="10"/>
+
+    <menuitem id="menu_steel_workcenters"
+              name="Workcenters"
+              parent="menu_steel_config_master"
+              action="mrp.mrp_workcenter_action"
+              sequence="30"/>
+
+    <menuitem id="menu_steel_operations_config"
+              name="MRP Operations"
+              parent="menu_steel_config_master"
+              action="mrp.mrp_routing_action"
+              sequence="40"/>
+
+    <!-- ========================================== -->
+    <!-- REPORTING MENU ITEMS                       -->
+    <!-- ========================================== -->
+
+    <menuitem id="menu_steel_reports"
+              name="Reports"
+              parent="menu_steel_main"
+              sequence="90"/>
+
+    <menuitem id="menu_steel_dashboard"
+              name="Dashboard"
+              parent="menu_steel_reports"
+              action="action_steel_project_dashboard"
+              sequence="10"/>
+
+    <menuitem id="menu_steel_comparison_report"
+              name="Standard vs Actual"
+              parent="menu_steel_reports"
+              action="action_steel_comparison_report"
+              sequence="20"/>
+    <menuitem id="menu_steel_operation_matrix"
+              name="Parts Matrix"
+              parent="menu_steel_production"
+              action="action_steel_operation_matrix"
+              sequence="30"/>
+
+</odoo>
