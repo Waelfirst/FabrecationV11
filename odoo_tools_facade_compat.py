@@ -1,8 +1,22 @@
 """
 Compatibility module for odoo.tools.facade
 
-The odoo.tools.facade module was removed in Odoo 17.
-This module provides basic compatibility shims for code that still references it.
+The odoo.tools.facade module existed in older Odoo versions (before v17) but was removed
+in Odoo 17 as part of the framework modernization. However, some third-party modules or
+legacy code may still attempt to import from it.
+
+This compatibility module provides basic implementations of Proxy, ProxyAttr, and ProxyFunc
+classes to prevent ModuleNotFoundError when such imports are encountered.
+
+Usage:
+    This module is automatically installed when the Steel Structure Project module is loaded.
+    The install_facade_compatibility() function registers the facade module in sys.modules,
+    allowing any code that imports from odoo.tools.facade to work without errors.
+
+Note:
+    These are minimal implementations designed for compatibility only. If your code
+    heavily relies on the original facade functionality, you may need to extend these
+    classes with additional features.
 """
 
 import sys

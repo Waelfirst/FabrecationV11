@@ -213,6 +213,18 @@ Total: 18 access rules
 ✅ Many2many relations properly defined
 ✅ Currency fields for all monetary values
 ✅ Proper indexing and ordering
+✅ Odoo 17 compatibility (includes odoo.tools.facade shim)
+
+## Troubleshooting
+
+### ModuleNotFoundError: No module named 'odoo.tools.facade'
+
+This module includes a compatibility shim for the `odoo.tools.facade` module, which was removed in Odoo 17. The shim is automatically installed when the module loads, providing the missing `Proxy`, `ProxyAttr`, and `ProxyFunc` classes that some dependencies or legacy code may reference.
+
+If you encounter this error, ensure that:
+1. The module is properly installed in your Odoo addons path
+2. The module is loaded before any other modules that depend on odoo.tools.facade
+3. The `odoo_tools_facade_compat.py` file is present in the module directory
 
 ## Features Checklist
 
